@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "812517675089",
+    "project_id": "turide-aggregator",
+    "storage_bucket": "turide-aggregator.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:812517675089:android:304a7cf91b17d0877b2870",
+        "android_client_info": {
+          "package_name": "com.example.turide_aggregator"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "812517675089-ho0hc1fhno4l8houegme3f7ci5cfrvla.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.turide_aggregator",
+            "certificate_hash": "f95e940dfde2aa57f0bb85cba217d16bdd416077"
+          }
+        },
+        {
+          "client_id": "812517675089-su9v2bcoikd1vvg51h0ffs4jeoch1h6h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDEF5gBhMOahBb_pWTvYqr6bKyUKlq7rWY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "812517675089-su9v2bcoikd1vvg51h0ffs4jeoch1h6h.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "812517675089-nveuc9a43o7nimhmvlbn25f8kdk6ceqc.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.turideAggregator"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
