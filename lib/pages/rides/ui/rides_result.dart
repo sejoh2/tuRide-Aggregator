@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:turide_aggregator/pages/rides/ui/filter_tabs.dart';
+// import 'package:turide_aggregator/pages/rides/ui/filter_tabs.dart';
 import 'package:turide_aggregator/pages/rides/ui/location_card.dart';
 import 'package:turide_aggregator/pages/rides/ui/ride_tile.dart';
 import 'package:turide_aggregator/pages/rides/ui/sort_filter_bar.dart';
@@ -197,8 +197,7 @@ class _RidesResultState extends State<RidesResult> {
             const SortFilterBar(),
 
             // CATEGORY FILTER TABS
-            const FilterTabs(),
-
+            // const FilterTabs(),
             const SizedBox(height: 10),
 
             const Text(

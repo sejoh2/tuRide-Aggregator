@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:turide_aggregator/firebase_options.dart';
 import 'package:turide_aggregator/pages/Auth/sign_up_or_sign_in_toggle.dart';
 import 'package:turide_aggregator/pages/Home/ui/home_screen.dart';
+import 'package:turide_aggregator/pages/services%20offered/ui/schedule.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +24,10 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'tuRide',
       home: const AuthWrapper(), // 👈 handle login state here
-      routes: {'/homescreen': (context) => const HomeScreen()},
+      routes: {
+        '/homescreen': (context) => const HomeScreen(),
+        '/scheduleride': (context) => const ScheduleRide(),
+      },
     );
   }
 }

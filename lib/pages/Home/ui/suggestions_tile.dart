@@ -1,24 +1,27 @@
 import 'package:flutter/material.dart';
 
-class SuggestionTile extends StatelessWidget {
+class SuggestionTile extends StatefulWidget {
   final Function(int)? onTap;
-  final int selectedIndex;
+  const SuggestionTile({super.key, this.onTap});
 
-  const SuggestionTile({super.key, this.onTap, this.selectedIndex = 0});
+  @override
+  State<SuggestionTile> createState() => _SuggestionTileState();
+}
+
+class _SuggestionTileState extends State<SuggestionTile> {
+  int selectedIndex = 0; // track selected tile
+
+  final tiles = [
+    {'label': 'Rides', 'icon': Icons.directions_car},
+    {'label': 'Schedule', 'icon': Icons.access_time},
+    {'label': 'Motorbike', 'icon': Icons.pedal_bike},
+    {'label': 'Food', 'icon': Icons.fastfood},
+  ];
 
   @override
   Widget build(BuildContext context) {
-    final tiles = [
-      {'label': 'Rides', 'icon': Icons.directions_car},
-      {'label': 'Schedule', 'icon': Icons.access_time},
-      {'label': 'Motorbike', 'icon': Icons.pedal_bike},
-      {'label': 'Food', 'icon': Icons.fastfood},
-      {'label': 'Groceries', 'icon': Icons.inventory_2},
-      {'label': 'Drinks', 'icon': Icons.wine_bar},
-    ];
-
     return SizedBox(
-      height: 100, // Set a fixed height for tiles
+      height: 100,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
@@ -26,10 +29,13 @@ class SuggestionTile extends StatelessWidget {
             final isSelected = index == selectedIndex;
             return GestureDetector(
               onTap: () {
-                if (onTap != null) onTap!(index);
+                setState(() {
+                  selectedIndex = index; // update selected tile
+                });
+                if (widget.onTap != null) widget.onTap!(index);
               },
               child: Container(
-                width: 80, // Width for each tile so 4 fit at a time
+                width: 80,
                 margin: const EdgeInsets.symmetric(horizontal: 4.0),
                 padding: const EdgeInsets.symmetric(vertical: 12.0),
                 decoration: BoxDecoration(

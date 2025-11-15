@@ -36,6 +36,14 @@ class RideTile extends StatelessWidget {
         return 'https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/uber-icon.png';
       case 'lyft':
         return 'https://pnghdpro.com/wp-content/themes/pnghdpro/download/social-media-and-brands/lyft-app-icon.png';
+      case 'yego':
+        return 'https://i.postimg.cc/X7dBz8T5/Screenshot-2025-11-15-231457.png';
+      case 'faras':
+        return 'https://i.postimg.cc/ZqRR4FMh/Screenshot-2025-11-15-231625.png';
+      case 'bolt-bike':
+        return 'https://pnghdpro.com/wp-content/themes/pnghdpro/download/social-media-and-brands/bolt-taxi-app-icon.png';
+      case 'little':
+        return 'https://i.postimg.cc/xCDWt9Hs/Screenshot-2025-11-15-231922.png';
       default:
         return 'https://upload.wikimedia.org/wikipedia/commons/7/7e/Question_mark_alternate.svg';
     }

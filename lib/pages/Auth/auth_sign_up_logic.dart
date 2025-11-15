@@ -5,9 +5,7 @@ import 'package:flutter/material.dart';
 
 class AuthSignUpLogic {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore =
-      FirebaseFirestore.instance; // ✅ Firestore instance
-  bool _isLoading = false;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   /// Sign up with email and password
   Future<bool> signUp({
@@ -16,8 +14,6 @@ class AuthSignUpLogic {
     required String password,
     required BuildContext context,
   }) async {
-    if (_isLoading) return false; // prevent multiple taps
-
     // ✅ Validate empty fields
     if (name.trim().isEmpty ||
         email.trim().isEmpty ||
@@ -26,60 +22,40 @@ class AuthSignUpLogic {
       return false;
     }
 
-    // ✅ Cross-platform connectivity check
+    // ✅ Check connectivity
     var connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
       _showErrorSnackBar(context, 'No internet connection.');
       return false;
     }
 
+    if (!context.mounted) return false;
+
     try {
+      // ✅ Create user
       UserCredential userCredential = await _auth
           .createUserWithEmailAndPassword(
             email: email.trim(),
             password: password,
           );
 
-      // ✅ Store user info in Firestore under their UID
+      // ✅ Store user info in Firestore
       await _firestore.collection('users').doc(userCredential.user!.uid).set({
         'name': name,
         'email': email,
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      await _closeLoadingAndNavigate(context);
-      return true;
-    } on FirebaseAuthException catch (e) {
-      await _closeLoadingAndShowError(
+      // ✅ Navigate
+      if (!context.mounted) return false;
+      Navigator.pushNamedAndRemoveUntil(
         context,
-        _getFirebaseErrorMessage(e.code),
+        '/homescreen',
+        (route) => false,
       );
-      return false;
-    } catch (e) {
-      await _closeLoadingAndShowError(
-        context,
-        'Something went wrong. Please try again.',
-      );
-      return false;
-    }
-  }
 
-  Future<void> _closeLoadingAndNavigate(BuildContext context) async {
-    _isLoading = false;
-
-    if (context.mounted) {
-      // ✅ Pop the loading dialog first
-      Navigator.of(context, rootNavigator: true).pop();
-      await Future.delayed(const Duration(milliseconds: 100));
-
+      // ✅ Show success
       if (context.mounted) {
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/homescreen',
-          (route) => false,
-        );
-
-        // ✅ Show success message after navigation
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Account created successfully!'),
@@ -87,22 +63,14 @@ class AuthSignUpLogic {
           ),
         );
       }
-    }
-  }
 
-  Future<void> _closeLoadingAndShowError(
-    BuildContext context,
-    String message,
-  ) async {
-    _isLoading = false;
-
-    if (context.mounted) {
-      Navigator.of(context, rootNavigator: true).pop(); // pop loading
-      await Future.delayed(const Duration(milliseconds: 100));
-
-      if (context.mounted) {
-        _showErrorSnackBar(context, message);
-      }
+      return true;
+    } on FirebaseAuthException catch (e) {
+      _showErrorSnackBar(context, _getFirebaseErrorMessage(e.code));
+      return false;
+    } catch (e) {
+      _showErrorSnackBar(context, 'Something went wrong. Please try again.');
+      return false;
     }
   }
 
