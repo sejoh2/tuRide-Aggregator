@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:turide_aggregator/pages/Home/Maps/logic/logic/places_logic.dart';
+import 'package:turide_aggregator/pages/Home/Maps/logic/places_logic.dart';
 
 class LocationTextField extends StatefulWidget {
   final String hintText;

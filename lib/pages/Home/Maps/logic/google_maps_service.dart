@@ -4,43 +4,71 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
-import 'logic/places_logic.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'places_logic.dart';
 
 class GoogleMapsService {
-  // Existing location functionality
+  // Track if a location request is in progress to prevent simultaneous requests
+  // This helps mitigate the 'A request for permissions is already running' error.
+  bool _requestInProgress = false;
+
+  /// Robust location fetching with permission and service handling.
   Future<LatLng?> getCurrentLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
+    if (_requestInProgress) {
+      // Prevents simultaneous requests that cause the PlatformException error
+      print('Location request already in progress. Skipping call.');
       return null;
     }
-
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        return null;
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      return null;
-    }
+    _requestInProgress = true;
 
     try {
-      Position position = await Geolocator.getCurrentPosition(
+      // 1. Check current permission status
+      var status = await Permission.location.status;
+
+      // 2. Handle Permanent Denial (Fixes friend's phone issue)
+      if (status.isPermanentlyDenied) {
+        print('Location permission permanently denied. Opening app settings.');
+        // This is the key fix: force the user to settings to manually enable it.
+        await openAppSettings();
+        return null;
+      }
+
+      // 3. Request Permission if not granted (or restricted)
+      if (!status.isGranted) {
+        status = await Permission.location.request();
+        if (!status.isGranted) {
+          print('User denied location permission during request.');
+          return null;
+        }
+      }
+
+      // 4. Check if GPS/location services are enabled
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        print('Location service is disabled. Prompting user to enable.');
+        // Prompt user to enable location services
+        Geolocator.openLocationSettings();
+        return null;
+      }
+
+      // 5. Get current position
+      final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 10),
       );
+
       return LatLng(position.latitude, position.longitude);
     } catch (e) {
       print('Error getting location: $e');
       return null;
+    } finally {
+      _requestInProgress = false; // Reset flag
     }
   }
 
-  // New route drawing functionality
+  // --- REST OF THE CODE REMAINS THE SAME ---
+
+  // Route drawing functionality
   static Future<RouteData?> getRoute({
     required PlaceDetails origin,
     required PlaceDetails destination,
@@ -60,7 +88,6 @@ class GoogleMapsService {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-
         if (data['status'] == 'OK' && data['routes'].isNotEmpty) {
           return RouteData.fromJson(data['routes'][0], origin, destination);
         }
@@ -72,6 +99,7 @@ class GoogleMapsService {
     return null;
   }
 
+  // Marker creation for pickup and destination
   static Set<Marker> createMarkers({
     required PlaceDetails pickup,
     required PlaceDetails destination,
@@ -92,6 +120,7 @@ class GoogleMapsService {
     };
   }
 
+  // Calculate map bounds to include both pickup and destination
   static LatLngBounds calculateBounds({
     required PlaceDetails pickup,
     required PlaceDetails destination,
@@ -157,6 +186,7 @@ class RouteData {
     );
   }
 
+  // Polyline decoding from Google Maps API
   static List<LatLng> _decodePolyline(String polyline) {
     List<LatLng> points = [];
     int index = 0;

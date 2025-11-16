@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:turide_aggregator/pages/Auth/ui/my_button.dart';
 import 'package:turide_aggregator/pages/Finding%20best%20prices/ui/finding_best_prices_tile.dart';
-import 'package:turide_aggregator/pages/Home/Maps/logic/logic/places_logic.dart';
+import 'package:turide_aggregator/pages/Home/Maps/logic/places_logic.dart';
+import 'package:turide_aggregator/pages/Home/Maps/ui/auto_pickup_location_field.dart';
 import 'package:turide_aggregator/pages/Home/Maps/ui/location_text_field.dart';
 import 'package:turide_aggregator/pages/Home/ui/schedule_ride_tile.dart';
 import 'package:turide_aggregator/pages/Home/ui/suggestions_tile.dart';
@@ -43,16 +44,19 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           .doc(user.uid)
           .get();
 
+      if (!mounted) return; // 🔹 Check if still in widget tree
+
       if (doc.exists) {
         setState(() {
           userName = doc['name'] ?? 'User';
-          isLoadingUser = false; // 🔹 stop shimmer
+          isLoadingUser = false; // stop shimmer
         });
       }
     } else {
+      if (!mounted) return; // 🔹 Check before setState
       setState(() {
         userName = 'User';
-        isLoadingUser = false; // 🔹 stop shimmer
+        isLoadingUser = false; // stop shimmer
       });
     }
   }
@@ -91,17 +95,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
             const SizedBox(height: 20),
 
-            LocationTextField(
-              hintText: 'Pick up Location',
-              prefixIcon: Icon(Icons.location_pin),
-              controller: pickupController,
-              obscureText: false,
+            AutoPickupLocationField(
               onPlaceSelected: (PlaceDetails details) {
                 setState(() {
                   selectedPickupPlace = details;
                 });
-                print('Pickup selected: ${details.formattedAddress}');
-                print('Coordinates: ${details.latitude}, ${details.longitude}');
               },
             ),
 
@@ -146,10 +144,13 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                 text: 'Search Rides',
                 onTap: () async {
                   // Validate that both locations are selected
-                  if (selectedPickupPlace == null) {
+                  if (selectedPickupPlace == null ||
+                      selectedDestinationPlace == null) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Please select a pickup location'),
+                        content: Text(
+                          'Please select both pickup and destination locations',
+                        ),
                         backgroundColor: Colors.red,
                       ),
                     );

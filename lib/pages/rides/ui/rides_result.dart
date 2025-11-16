@@ -4,7 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:turide_aggregator/pages/rides/ui/location_card.dart';
 import 'package:turide_aggregator/pages/rides/ui/ride_tile.dart';
 import 'package:turide_aggregator/pages/rides/ui/sort_filter_bar.dart';
-import 'package:turide_aggregator/pages/Home/Maps/logic/logic/places_logic.dart';
+import 'package:turide_aggregator/pages/Home/Maps/logic/places_logic.dart';
 import 'package:turide_aggregator/pages/Home/Maps/logic/google_maps_service.dart';
 import 'package:turide_aggregator/services/ride_pricing_service.dart';
 

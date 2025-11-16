@@ -21,6 +21,8 @@ class _SignUpState extends State<SignUp> {
   final AuthSignUpLogic _authLogic = AuthSignUpLogic();
 
   bool isLoading = false;
+  bool _obscurePassword = true;
+
   @override
   void dispose() {
     nameController.dispose();
@@ -152,7 +154,20 @@ class _SignUpState extends State<SignUp> {
                                     Icons.lock,
                                     color: Colors.grey[500],
                                   ),
-                                  obscureText: true,
+                                  obscureText: _obscurePassword,
+                                  suffixIcon: InkWell(
+                                    onTap: () {
+                                      setState(() {
+                                        _obscurePassword = !_obscurePassword;
+                                      });
+                                    },
+                                    child: Icon(
+                                      _obscurePassword
+                                          ? Icons.visibility_off
+                                          : Icons.visibility,
+                                      color: Colors.grey[500],
+                                    ),
+                                  ),
                                 ),
                                 const SizedBox(height: 30),
                                 Row(

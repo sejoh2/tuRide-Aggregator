@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:turide_aggregator/pages/Home/Maps/logic/logic/places_logic.dart';
+import 'package:turide_aggregator/pages/Home/Maps/logic/places_logic.dart';
 
 class LocationCard extends StatelessWidget {
   final PlaceDetails? pickupPlace;

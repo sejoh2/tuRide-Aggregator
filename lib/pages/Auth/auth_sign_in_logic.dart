@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 class AuthSignInLogic {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  bool _isLoading = false;
 
   /// Sign in with email and password
   Future<bool> signIn({
@@ -12,29 +11,19 @@ class AuthSignInLogic {
     required String password,
     required BuildContext context,
   }) async {
-    if (_isLoading) return false;
-
     if (email.trim().isEmpty || password.trim().isEmpty) {
-      _showErrorSnackBar(context, 'Email and password cannot be empty.');
+      _showErrorSnackBar(context, 'Please enter both email and password.');
       return false;
     }
 
-    // ✅ Check Internet connectivity before trying to sign in
-    // ✅ Cross-platform connectivity check
+    // Check connectivity
     var connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
-      _showErrorSnackBar(context, 'No internet connection.');
+      _showErrorSnackBar(context, _getFirebaseErrorMessage('no-connection'));
       return false;
     }
 
     if (!context.mounted) return false;
-
-    _isLoading = true;
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
-    );
 
     try {
       await _auth.signInWithEmailAndPassword(
@@ -42,55 +31,24 @@ class AuthSignInLogic {
         password: password,
       );
 
-      await _closeLoadingAndNavigate(context);
+      if (!context.mounted) return false;
+
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/homescreen',
+        (route) => false,
+      );
+
       return true;
     } on FirebaseAuthException catch (e) {
-      await _closeLoadingAndShowError(
-        context,
-        _getFirebaseErrorMessage(e.code),
-      );
+      _showErrorSnackBar(context, _getFirebaseErrorMessage(e.code));
       return false;
     } catch (e) {
-      await _closeLoadingAndShowError(
+      _showErrorSnackBar(
         context,
-        'Something went wrong: ${e.toString()}',
+        'Something went wrong. Please try again later.',
       );
       return false;
-    }
-  }
-
-  Future<void> _closeLoadingAndNavigate(BuildContext context) async {
-    _isLoading = false;
-
-    if (context.mounted) {
-      // ✅ UPDATED LINE
-      Navigator.of(context, rootNavigator: true).pop();
-      await Future.delayed(const Duration(milliseconds: 100));
-
-      if (context.mounted) {
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/homescreen',
-          (route) => false,
-        );
-      }
-    }
-  }
-
-  Future<void> _closeLoadingAndShowError(
-    BuildContext context,
-    String message,
-  ) async {
-    _isLoading = false;
-
-    if (context.mounted) {
-      // ✅ UPDATED LINE
-      Navigator.of(context, rootNavigator: true).pop();
-      await Future.delayed(const Duration(milliseconds: 100));
-
-      if (context.mounted) {
-        _showErrorSnackBar(context, message);
-      }
     }
   }
 
@@ -105,25 +63,21 @@ class AuthSignInLogic {
   String _getFirebaseErrorMessage(String code) {
     switch (code) {
       case 'invalid-email':
-        return 'The email address is not valid.';
+        return 'The email address is not valid. Please check and try again.';
       case 'user-disabled':
-        return 'This user account has been disabled.';
+        return 'This account has been disabled. Contact support if this is a mistake.';
       case 'user-not-found':
-        return 'No user found with this email.';
+        return 'No account found with this email. Please sign up first.';
       case 'wrong-password':
-        return 'Incorrect password.';
-      case 'email-already-in-use':
-        return 'This email is already in use.';
-      case 'operation-not-allowed':
-        return 'Email/password sign-in is not enabled.';
+        return 'Incorrect password. Please check your credentials and try again.';
       case 'too-many-requests':
-        return 'Too many attempts. Try again later.';
-      case 'network-request-failed':
-        return 'Network error. Please check your connection.';
-      case 'invalid-credential':
-        return 'Invalid email or password.';
+        return 'Too many failed attempts. Please try again later.';
+      case 'operation-not-allowed':
+        return 'Email/password sign-in is not enabled. Contact support.';
+      case 'no-connection':
+        return 'No internet connection detected. Please check your connectivity and try again.';
       default:
-        return 'An error occurred. Please try again.';
+        return 'An unexpected error occurred. Please check your credentials or connectivity and try again.';
     }
   }
 }
