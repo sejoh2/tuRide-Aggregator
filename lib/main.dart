@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:turide_aggregator/firebase_options.dart';
-import 'package:turide_aggregator/pages/Auth/sign_up_or_sign_in_toggle.dart';
 import 'package:turide_aggregator/pages/Home/ui/home_screen.dart';
+import 'package:turide_aggregator/pages/landingpage.dart';
+
 import 'package:turide_aggregator/pages/services%20offered/ui/schedule.dart';
+import 'package:turide_aggregator/pages/services%20offered/ui/scheduled_ride_history.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,6 +29,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/homescreen': (context) => const HomeScreen(),
         '/scheduleride': (context) => const ScheduleRide(),
+        '/scheduleridehistory': (context) => const ScheduledRideHistory(),
       },
     );
   }
@@ -38,22 +41,21 @@ class AuthWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(), // 👈 watches auth state
+      stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        // 🕐 Still loading
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        // 👤 User is logged in
         if (snapshot.hasData) {
+          // User is logged in → go to HomeScreen
           return const HomeScreen();
         }
 
-        // 🚪 User is NOT logged in
-        return const LoginOrRegisterPage();
+        // User is NOT logged in → show LandingPage
+        return const LandingPage();
       },
     );
   }

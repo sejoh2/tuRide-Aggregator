@@ -47,6 +47,10 @@ dependencies:
   shimmer: ^3.0.0
   provider: ^6.0.5
   permission_handler: ^12.0.1
+  flutter_native_splash: ^2.4.7
+  flutter_launcher_icons: ^0.14.4
+  dropdown_button2: ^2.3.9
+  
 
 dev_dependencies:
   flutter_test:
@@ -101,3 +105,32 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "lib/images/icon.png"                   # fallback for iOS & normal Android icon
+  adaptive_icon_background: "#C4FF00"                # lime green background
+  adaptive_icon_foreground: "lib/images/icon.png"    # foreground image for Android
+
+
+  
+flutter_native_splash:
+  # Background color for the splash screen
+  color: "#C4FF00" 
+
+  # Image for the splash screen
+  image: lib/images/icon.png
+
+  # Optional: branding (for iOS and Android)
+  branding: lib/images/icon.png
+
+  # Dark mode color
+  color_dark: "#121212"
+
+  # Android 12+ specific adaptive splash
+  android_12:
+    # Background color behind your icon
+    color: "#C4FF00"
+
+    # Foreground image for adaptive icon
+    image: lib/images/icon.png

@@ -236,15 +236,6 @@ class _SignInState extends State<SignIn> {
                                                 setState(
                                                   () => isLoading = false,
                                                 );
-
-                                                if (mounted &&
-                                                    ModalRoute.of(
-                                                          context,
-                                                        )?.settings.name ==
-                                                        '/homescreen') {
-                                                  emailController.clear();
-                                                  passwordController.clear();
-                                                }
                                               },
                                         child: Row(
                                           mainAxisAlignment:

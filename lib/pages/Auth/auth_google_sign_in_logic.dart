@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -5,10 +6,11 @@ import 'package:google_sign_in/google_sign_in.dart';
 class AuthGoogleSignInLogic {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<void> signInWithGoogle(BuildContext context) async {
     try {
-      await _googleSignIn.initialize(); // required in v7+
+      await _googleSignIn.initialize();
 
       final GoogleSignInAccount? googleUser = await _googleSignIn
           .authenticate();
@@ -16,8 +18,6 @@ class AuthGoogleSignInLogic {
 
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
-
-      // For Firebase sign‑in you can use idToken ONLY
       final idToken = googleAuth.idToken;
 
       if (idToken == null) {
@@ -27,12 +27,33 @@ class AuthGoogleSignInLogic {
         );
       }
 
-      final credential = GoogleAuthProvider.credential(
-        idToken: idToken,
-        // accessToken: googleAuth.accessToken,  // optional, and may be null
+      final credential = GoogleAuthProvider.credential(idToken: idToken);
+
+      UserCredential userCredential = await _auth.signInWithCredential(
+        credential,
       );
 
-      await _auth.signInWithCredential(credential);
+      // Check if the user is new
+      if (userCredential.additionalUserInfo?.isNewUser ?? false) {
+        // Store user info in Firestore
+        await _firestore.collection('users').doc(userCredential.user!.uid).set({
+          'name':
+              userCredential.user!.displayName ??
+              googleUser.displayName ??
+              'User',
+          'email': userCredential.user!.email ?? googleUser.email,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      // ✅ ADD THIS NAVIGATION - This was missing!
+      if (context.mounted) {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/homescreen',
+          (route) => false,
+        );
+      }
 
       if (context.mounted) {
         ScaffoldMessenger.of(
@@ -50,25 +71,6 @@ class AuthGoogleSignInLogic {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Google Sign‑In Error: $e')));
-      }
-    }
-  }
-
-  Future<void> signOut(BuildContext context) async {
-    try {
-      await _googleSignIn.signOut();
-      await _auth.signOut();
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Signed out successfully')),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Sign‑out Error: $e')));
       }
     }
   }

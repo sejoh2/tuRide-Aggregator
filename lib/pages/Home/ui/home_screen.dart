@@ -1,12 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:turide_aggregator/pages/Auth/ui/my_button.dart';
 import 'package:turide_aggregator/pages/Finding%20best%20prices/ui/finding_best_prices_tile.dart';
 import 'package:turide_aggregator/pages/Home/Maps/logic/places_logic.dart';
 import 'package:turide_aggregator/pages/Home/Maps/ui/auto_pickup_location_field.dart';
 import 'package:turide_aggregator/pages/Home/Maps/ui/location_text_field.dart';
+import 'package:turide_aggregator/pages/Home/ui/home_drawer.dart';
 import 'package:turide_aggregator/pages/Home/ui/schedule_ride_tile.dart';
 import 'package:turide_aggregator/pages/Home/ui/suggestions_tile.dart';
 import 'package:turide_aggregator/pages/Home/Maps/ui/google_map_widget.dart';
@@ -76,14 +76,17 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
     return Scaffold(
       appBar: AppBar(
-        title: isLoadingUser
-            ? Shimmer.fromColors(
-                baseColor: Colors.white54,
-                highlightColor: Colors.white,
-                child: Container(width: 150, height: 20, color: Colors.grey),
-              )
-            : Text('Welcome $userName'),
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu), // Menu icon
+            onPressed: () {
+              Scaffold.of(context).openDrawer(); // Open drawer when tapped
+            },
+          ),
+        ),
       ),
+      drawer: HomeDrawer(userName: userName.isNotEmpty ? userName : null),
+
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -144,8 +147,13 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                 text: 'Search Rides',
                 onTap: () async {
                   // Validate that both locations are selected
-                  if (selectedPickupPlace == null ||
-                      selectedDestinationPlace == null) {
+                  // ✅ Comprehensive validation
+                  bool hasValidPickup = selectedPickupPlace != null;
+                  bool hasValidDestination =
+                      selectedDestinationPlace != null &&
+                      destinationController.text.isNotEmpty;
+
+                  if (!hasValidPickup || !hasValidDestination) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text(
