@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:turide_aggregator/pages/Home/Maps/logic/places_logic.dart';
 
 class ScheduledRide {
   final String? id;

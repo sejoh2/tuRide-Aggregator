@@ -85,6 +85,18 @@ class _RidesResultState extends State<RidesResult> {
     }
   }
 
+  Future<void> _refreshRides() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Reload route + polyline + markers
+    await _loadRoute();
+
+    // Rebuild FutureBuilder for ride prices by triggering setState
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -194,7 +206,7 @@ class _RidesResultState extends State<RidesResult> {
             ),
 
             // SORT + FILTER BAR
-            const SortFilterBar(),
+            SortFilterBar(onRefresh: _refreshRides),
 
             // CATEGORY FILTER TABS
             // const FilterTabs(),

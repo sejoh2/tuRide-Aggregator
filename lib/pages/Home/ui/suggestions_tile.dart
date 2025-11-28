@@ -28,11 +28,27 @@ class _SuggestionTileState extends State<SuggestionTile> {
           children: List.generate(tiles.length, (index) {
             final isSelected = index == selectedIndex;
             return GestureDetector(
-              onTap: () {
+              onTap: () async {
                 setState(() {
                   selectedIndex = index; // update selected tile
                 });
-                if (widget.onTap != null) widget.onTap!(index);
+
+                await Future.delayed(const Duration(milliseconds: 300));
+
+                // Handle navigation here
+                switch (index) {
+                  case 0:
+                    break;
+                  case 1:
+                    Navigator.pushNamed(context, '/scheduleride');
+                    break;
+                  case 2:
+                    Navigator.pushNamed(context, '/motorbikepage');
+                    break;
+                  case 3:
+                    Navigator.pushNamed(context, '/foodpage');
+                    break;
+                }
               },
               child: Container(
                 width: 80,

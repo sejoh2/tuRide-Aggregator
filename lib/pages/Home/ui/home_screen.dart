@@ -117,8 +117,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                 setState(() {
                   selectedDestinationPlace = details;
                 });
-                print('Destination selected: ${details.formattedAddress}');
-                print('Coordinates: ${details.latitude}, ${details.longitude}');
               },
             ),
 
@@ -146,19 +144,24 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               child: MyButton(
                 text: 'Search Rides',
                 onTap: () async {
-                  // Validate that both locations are selected
-                  // ✅ Comprehensive validation
-                  bool hasValidPickup = selectedPickupPlace != null;
-                  bool hasValidDestination =
-                      selectedDestinationPlace != null &&
-                      destinationController.text.isNotEmpty;
-
-                  if (!hasValidPickup || !hasValidDestination) {
+                  await Future.delayed(Duration(milliseconds: 300));
+                  if (selectedPickupPlace == null) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text(
-                          'Please select both pickup and destination locations',
+                          'Detecting pickup location, please wait...',
                         ),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+
+                  if (selectedDestinationPlace == null ||
+                      destinationController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please select a destination'),
                         backgroundColor: Colors.red,
                       ),
                     );

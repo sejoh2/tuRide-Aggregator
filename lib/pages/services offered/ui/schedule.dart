@@ -5,6 +5,7 @@ import 'package:turide_aggregator/pages/Home/Maps/logic/places_logic.dart';
 import 'package:turide_aggregator/pages/Home/Maps/logic/google_maps_service.dart';
 import 'package:turide_aggregator/pages/Home/Maps/ui/google_map_widget.dart';
 import 'package:turide_aggregator/pages/Home/Maps/ui/location_text_field.dart';
+import 'package:turide_aggregator/pages/services%20offered/logic/schedule_deeplink.dart';
 import 'package:turide_aggregator/pages/services%20offered/logic/schedule_pricing_logic.dart';
 import 'package:turide_aggregator/pages/services%20offered/ui/platform_dropdown.dart';
 import 'package:turide_aggregator/pages/services%20offered/logic/schedule_ride_logic.dart';
@@ -26,9 +27,97 @@ class _ScheduleRideState extends State<ScheduleRide> {
   RouteData? routeData;
   String? selectedPlatform;
   EstimatedPrice? estimatedPrice;
+  DateTime? selectedDate;
+  TimeOfDay? selectedTime;
 
   bool isLoadingRoute = false;
   bool isSavingRide = false;
+
+  // Method to show date picker
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Colors.black, // header background color
+              onPrimary: Colors.white, // header text color
+              onSurface: Colors.black, // body text color
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.black, // button text color
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != selectedDate) {
+      setState(() {
+        selectedDate = picked;
+      });
+    }
+  }
+
+  // Method to show time picker
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Colors.black,
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(foregroundColor: Colors.black),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != selectedTime) {
+      setState(() {
+        selectedTime = picked;
+      });
+    }
+  }
+
+  // Get formatted date string
+  String get formattedDate {
+    if (selectedDate == null) return 'Select Date';
+    return '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}';
+  }
+
+  // Get formatted time string
+  String get formattedTime {
+    if (selectedTime == null) return 'Select Time';
+    return selectedTime!.format(context);
+  }
+
+  // Combine date and time into DateTime
+  DateTime get scheduledDateTime {
+    if (selectedDate == null || selectedTime == null) {
+      return DateTime.now();
+    }
+    return DateTime(
+      selectedDate!.year,
+      selectedDate!.month,
+      selectedDate!.day,
+      selectedTime!.hour,
+      selectedTime!.minute,
+    );
+  }
 
   void _onPickupSelected(PlaceDetails details) {
     setState(() {
@@ -128,12 +217,35 @@ class _ScheduleRideState extends State<ScheduleRide> {
       return;
     }
 
+    // Validate date and time
+    if (selectedDate == null || selectedTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select date and time for your ride'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Validate that selected date/time is in the future
+    final now = DateTime.now();
+    final scheduledTime = scheduledDateTime;
+    if (scheduledTime.isBefore(now)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a future date and time'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       isSavingRide = true;
     });
 
     try {
-      // Get current user ID (you'll need to implement this based on your auth system)
       final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
 
       final scheduledRide = ScheduledRide(
@@ -151,7 +263,7 @@ class _ScheduleRideState extends State<ScheduleRide> {
         duration: routeData!.duration,
         estimatedPrice: estimatedPrice?.total ?? 0.0,
         currency: 'KES',
-        scheduledAt: DateTime.now(),
+        scheduledAt: scheduledDateTime, // Use the combined date and time
       );
 
       final rideId = await _scheduleLogic.saveScheduledRide(scheduledRide);
@@ -160,11 +272,30 @@ class _ScheduleRideState extends State<ScheduleRide> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Ride scheduled successfully! Price: ${estimatedPrice?.formattedTotal ?? 'N/A'}',
+              'Ride scheduled successfully for $formattedDate at $formattedTime! Price: ${estimatedPrice?.formattedTotal ?? 'N/A'}',
             ),
             backgroundColor: Colors.green,
           ),
         );
+
+        // Add 2-second delay before launching deep link
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        // Launch the ride platform app with deep link
+        try {
+          await ScheduleDeepLink.launchRideApp(
+            platform: selectedPlatform!,
+            pickupLat: selectedPickupPlace!.latitude,
+            pickupLng: selectedPickupPlace!.longitude,
+            pickupAddress: selectedPickupPlace!.formattedAddress,
+            destinationLat: selectedDestinationPlace!.latitude,
+            destinationLng: selectedDestinationPlace!.longitude,
+            destinationAddress: selectedDestinationPlace!.formattedAddress,
+          );
+        } catch (e) {
+          print('Error launching ride app: $e');
+          // Don't show error to user - it's optional functionality
+        }
 
         // Clear the form after successful scheduling
         _clearForm();
@@ -197,6 +328,8 @@ class _ScheduleRideState extends State<ScheduleRide> {
       routeData = null;
       selectedPlatform = null;
       estimatedPrice = null;
+      selectedDate = null;
+      selectedTime = null;
     });
   }
 
@@ -321,6 +454,36 @@ class _ScheduleRideState extends State<ScheduleRide> {
 
             const SizedBox(height: 10),
 
+            // Date and Time Selection
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  // Date Picker
+                  Expanded(
+                    child: _buildDateTimeButton(
+                      icon: Icons.calendar_today,
+                      text: formattedDate,
+                      onTap: () => _selectDate(context),
+                      isSelected: selectedDate != null,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  // Time Picker
+                  Expanded(
+                    child: _buildDateTimeButton(
+                      icon: Icons.access_time,
+                      text: formattedTime,
+                      onTap: () => _selectTime(context),
+                      isSelected: selectedTime != null,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
             LocationTextField(
               hintText: 'Pick Up Location',
               prefixIcon: const Icon(Icons.location_pin),
@@ -346,6 +509,51 @@ class _ScheduleRideState extends State<ScheduleRide> {
               child: MyButton(
                 text: isSavingRide ? 'Scheduling...' : 'Schedule Ride',
                 onTap: isSavingRide ? null : _onScheduleRide,
+              ),
+            ),
+
+            const SizedBox(height: 30),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateTimeButton({
+    required IconData icon,
+    required String text,
+    required VoidCallback onTap,
+    required bool isSelected,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 50,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(
+            color: isSelected ? Colors.grey.shade400 : Colors.grey.shade600,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? Colors.black : Colors.grey.shade600,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                text,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isSelected ? Colors.black : Colors.grey.shade600,
+                  fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
+                ),
               ),
             ),
           ],

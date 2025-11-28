@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:turide_aggregator/firebase_options.dart';
+import 'package:turide_aggregator/pages/Home/motorbike_page.dart';
+import 'package:turide_aggregator/pages/Home/ui/food_page.dart';
 import 'package:turide_aggregator/pages/Home/ui/home_screen.dart';
 import 'package:turide_aggregator/pages/landingpage.dart';
 
@@ -30,6 +32,8 @@ class MyApp extends StatelessWidget {
         '/homescreen': (context) => const HomeScreen(),
         '/scheduleride': (context) => const ScheduleRide(),
         '/scheduleridehistory': (context) => const ScheduledRideHistory(),
+        '/motorbikepage': (context) => const MotorBike(),
+        '/foodpage': (context) => const FoodPage(),
       },
     );
   }
